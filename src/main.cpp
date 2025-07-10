@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <iostream>
 #include <deque>
+#include <raymath.h>
 using namespace std;
 
 Color green = {173, 204, 96, 255};
@@ -9,11 +10,38 @@ Color darkgreen = {43, 51, 24, 255};
 int cellSize = 30;
 int cellCount = 25;
 
+/* to keep track of time at which last update of snake occured.*/
+double lastUpdatetime = 0;
+
+
+/* Some smaller helper function for the code modularity */
+
+bool eventTriggered( double interval ){
+    double currentTime = GetTime();
+
+    if( (currentTime - lastUpdatetime) > interval ){
+        lastUpdatetime = currentTime;
+        return true;
+    }
+    return false;
+}
+
+bool element_inDeque( Vector2 element, deque<Vector2>& dq){
+
+    for(unsigned int i = 0; i<dq.size(); i++ ){
+        
+        if(Vector2Equals( element, dq[i])) return true;
+    }
+    return false;
+}
+
 
 class Snake{
 
 public:
     deque<Vector2> body = {Vector2{6,9}, Vector2{5,9}, Vector2{4,9}};
+    Vector2 direction = {1,0};
+
 
     void Draw(){
         /* draw the complete body of the snake */
@@ -26,24 +54,27 @@ public:
         }
     }
 
+    void Update(){
+        /* update the snake : remove the last block and add the new one in front.*/
+
+        body.pop_back();
+        body.push_front(Vector2Add(body[0], direction));
+    }
+
 };
-
-
-
-
-
-
 
 class Food{
 
 public:
     /* Members required to describe the food bite.*/
-    Vector2 position = GeneratRandomPosition();
+    Vector2 position;
     Texture2D texture;
 
     /* Rendering the texture to be used as food, 
        Custom Constructor this is. */
-    Food(){
+    Food(deque<Vector2> snakebody){
+
+        position = GenerateRandomPosition(snakebody);
         Image image = LoadImage("Graphics/food.png");
         texture = LoadTextureFromImage(image);
         UnloadImage(image);
@@ -61,18 +92,55 @@ public:
 
     }
 
-    /* Generates the randome position for the food in each iteration.*/
-    Vector2 GeneratRandomPosition(){
+    Vector2 GenerateRandomCell(){
 
         float x = GetRandomValue(0, cellCount-1);
         float y = GetRandomValue(0, cellCount-1);
+        Vector2 position = Vector2{x, y};
 
-        Vector2 newPosition = {x, y};
+        return position;
+    }
+
+    /* Generates the randome position for the food in each iteration.*/
+    Vector2 GenerateRandomPosition(deque<Vector2> Snakebody){
+
+        Vector2 newPosition = GenerateRandomCell();
+        while(element_inDeque(newPosition, Snakebody)){
+
+            newPosition = GenerateRandomCell();
+        }
         return newPosition;
     }
 };
 
+class Game{
 
+public:
+    
+    Snake snake = Snake();
+    Food food = Food(snake.body);
+
+
+    void Draw(){
+
+        food.Draw();
+        snake.Draw();
+    }
+
+    void Update(){
+
+        snake.Update();
+    }
+
+    void CheckCollisionWithFood(){
+
+        if(Vector2Equals(snake.body[0], food.position)){
+
+            food.position = food.GenerateRandomPosition(snake.body);
+        }
+    }
+
+};
 
 
 
@@ -84,19 +152,35 @@ int main() {
     InitWindow(cellSize*cellCount, cellSize*cellCount, "Retro Snake");
     SetTargetFPS(60);
 
-    Food food = Food();
-    Snake snake = Snake();
+    Game game = Game();
 
     while(WindowShouldClose() == false){
 
         /* begin drawing for the new iteration of the gameloop.*/
         BeginDrawing();
+        
+        if(eventTriggered(0.2)){
+            game.Update();
+            game.CheckCollisionWithFood();
+        }
+
+        if (IsKeyPressed(KEY_UP) && game.snake.direction.y != 1) {
+            game.snake.direction = {0, -1};
+        }
+        if (IsKeyPressed(KEY_DOWN) && game.snake.direction.y != -1) {
+            game.snake.direction = {0, 1};
+        }
+        if (IsKeyPressed(KEY_LEFT) && game.snake.direction.x != 1) {
+            game.snake.direction = {-1, 0};
+        }
+        if (IsKeyPressed(KEY_RIGHT) && game.snake.direction.x != -1) {
+            game.snake.direction = {1, 0};
+        }
+
 
         /* clear background */
         ClearBackground(green);
-
-        food.Draw();
-        snake.Draw();
+        game.Draw();
 
         EndDrawing();
 
