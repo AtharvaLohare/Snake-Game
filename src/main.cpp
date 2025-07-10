@@ -10,7 +10,23 @@ int cellSize = 30;
 int cellCount = 25;
 
 
+class Snake{
 
+public:
+    deque<Vector2> body = {Vector2{6,9}, Vector2{5,9}, Vector2{4,9}};
+
+    void Draw(){
+        /* draw the complete body of the snake */
+        for(unsigned int i = 0; i<body.size(); i++){
+
+            float x = body[i].x;
+            float y = body[i].y;
+            Rectangle body_seg = Rectangle{x*cellSize, y*cellSize, (float)cellSize, (float)cellSize};
+            DrawRectangleRounded(body_seg, 0.5, 6, darkgreen);
+        }
+    }
+
+};
 
 
 
@@ -68,15 +84,19 @@ int main() {
     InitWindow(cellSize*cellCount, cellSize*cellCount, "Retro Snake");
     SetTargetFPS(60);
 
+    Food food = Food();
+    Snake snake = Snake();
+
     while(WindowShouldClose() == false){
-
-
 
         /* begin drawing for the new iteration of the gameloop.*/
         BeginDrawing();
 
         /* clear background */
         ClearBackground(green);
+
+        food.Draw();
+        snake.Draw();
 
         EndDrawing();
 
