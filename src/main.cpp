@@ -12,6 +12,7 @@ int cellCount = 25;
 int offset = 75;
 double lastUpdatetime = 0;
 
+
 /* Some smaller helper function for the code modularity */
 
 bool eventTriggered( double interval ){
@@ -129,6 +130,21 @@ public:
     Snake snake = Snake();
     Food food = Food(snake.body);
     bool running = true;
+    int score = 0;
+
+    Sound eatSound;
+    Sound wallSound;
+
+    Game(){
+        InitAudioDevice();
+        eatSound = LoadSound("Sounds/eat.mp3");
+        wallSound = LoadSound("Sounds/wall.mp3");
+    }
+
+    ~Game(){
+        UnloadSound(eatSound);
+        UnloadSound(wallSound);
+    }
 
     void Draw(){
         food.Draw();
@@ -151,6 +167,8 @@ public:
         if(Vector2Equals(snake.body[0], food.position)){
             food.position = food.GenerateRandomPosition(snake.body);
             snake.addSegment = true;
+            score++;
+            PlaySound(eatSound);
         }
     }
 
@@ -182,6 +200,9 @@ public:
         snake.Reset();
         food.position = food.GenerateRandomPosition(snake.body);
         running = false;
+        score = 0;
+
+        PlaySound(wallSound);
     }
 };
 
@@ -228,7 +249,9 @@ int main() {
                                        (float)cellSize*cellCount + 10}, 
                                         5, darkgreen); 
         
-                                        
+        
+        DrawText("The Classic Snake", offset - 5, 20, 40, darkgreen);
+        DrawText(TextFormat("%i", game.score), offset-5, offset+cellSize*cellCount+10, 40, darkgreen);
         game.Draw();
 
         EndDrawing();
