@@ -9,10 +9,8 @@ Color darkgreen = {43, 51, 24, 255};
 
 int cellSize = 30;
 int cellCount = 25;
-
-/* to keep track of time at which last update of snake occured.*/
+int offset = 75;
 double lastUpdatetime = 0;
-
 
 /* Some smaller helper function for the code modularity */
 
@@ -49,7 +47,7 @@ public:
 
             float x = body[i].x;
             float y = body[i].y;
-            Rectangle body_seg = Rectangle{x*cellSize, y*cellSize, (float)cellSize, (float)cellSize};
+            Rectangle body_seg = Rectangle{offset + x*cellSize, offset + y*cellSize, (float)cellSize, (float)cellSize};
             DrawRectangleRounded(body_seg, 0.5, 6, darkgreen);
         }
     }
@@ -99,7 +97,7 @@ public:
 
     /* To draw the food in each iteration at a random position.*/
     void Draw(){
-        DrawTexture(texture, position.x*cellSize, position.y*cellSize, WHITE);
+        DrawTexture(texture,offset + position.x*cellSize, offset + position.y*cellSize, WHITE);
 
     }
 
@@ -140,7 +138,7 @@ public:
     void Update(){
 
         if(running){
-            
+
             snake.Update();
             checkCollisionWithFood();
             checkCollisionWithEdges();
@@ -188,13 +186,9 @@ public:
 };
 
 
-
-
-
-
 int main() {   
     
-    InitWindow(cellSize*cellCount, cellSize*cellCount, "Retro Snake");
+    InitWindow( 2*offset + cellSize*cellCount, 2*offset + cellSize*cellCount, "Retro Snake" );
     SetTargetFPS(60);
 
     Game game = Game();
@@ -228,6 +222,13 @@ int main() {
 
         /* clear background */
         ClearBackground(green);
+        DrawRectangleLinesEx(Rectangle{(float)offset - 5,
+                                       (float)offset - 5,
+                                       (float)cellSize*cellCount + 10,
+                                       (float)cellSize*cellCount + 10}, 
+                                        5, darkgreen); 
+        
+                                        
         game.Draw();
 
         EndDrawing();
